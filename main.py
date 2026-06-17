@@ -1,12 +1,12 @@
-from dadata import Dadata
 import os
-import asyncio
 import csv
+import json
+import asyncio
 import httpx
-import dotenv
+from dotenv import load_dotenv
 
+load_dotenv()
 
-dotenv.load_dotenv()
 TOKEN = os.getenv("API_KEY")
 
 URL = "https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party"
@@ -25,33 +25,51 @@ async def find_by_inn(client, inn):
             r = await client.post(
                 URL,
                 json={
-                    "query": inn,
+                    "query": str(inn),
                     "branch_type": "MAIN"
                 }
             )
 
             r.raise_for_status()
 
-            suggestions = r.json().get("suggestions", [])
+            response_json = r.json()
+
+            suggestions = response_json.get("suggestions", [])
 
             if suggestions:
-                company = suggestions[0]
-
                 return {
                     "inn": inn,
-                    "name": company.get("value"),
-                    "ogrn": company["data"].get("ogrn"),
+                    "raw_json": json.dumps(
+                        response_json,
+                        ensure_ascii=False
+                    )
                 }
 
-            return None
+            return {
+                "inn": inn,
+                "raw_json": json.dumps(
+                    response_json,
+                    ensure_ascii=False
+                )
+            }
 
         except Exception as e:
             print(f"Ошибка {inn}: {e}")
-            return None
+
+            return {
+                "inn": inn,
+                "raw_json": json.dumps(
+                    {"error": str(e)},
+                    ensure_ascii=False
+                )
+            }
 
 
 async def main():
-    inns = [7716810249, 2635255421]  # список ИНН
+    inns = [
+        7716810249,
+        2635255421,
+    ]
 
     async with httpx.AsyncClient(
         headers=HEADERS,
@@ -67,15 +85,14 @@ async def main():
             "dadata_result.csv",
             "w",
             newline="",
-            encoding="utf-8"
+            encoding="utf-8-sig"
         ) as f:
 
             writer = csv.DictWriter(
                 f,
                 fieldnames=[
                     "inn",
-                    "name",
-                    "ogrn",
+                    "raw_json",
                 ]
             )
 
@@ -86,8 +103,7 @@ async def main():
             for task in asyncio.as_completed(tasks):
                 row = await task
 
-                if row:
-                    writer.writerow(row)
+                writer.writerow(row)
 
                 count += 1
 
@@ -97,7 +113,8 @@ async def main():
     print("Готово")
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
 
 
 # for task in asyncio.as_completed(tasks):
