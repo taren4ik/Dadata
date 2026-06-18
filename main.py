@@ -16,7 +16,29 @@ HEADERS = {
     "Content-Type": "application/json",
 }
 
-sem = asyncio.Semaphore(20)
+CONCURRENCY = 20
+BATCH_SIZE = 1000
+
+sem = asyncio.Semaphore(CONCURRENCY)
+
+
+def flatten(data, parent_key="", sep="_"):
+    items = {}
+
+    if isinstance(data, dict):
+        for k, v in data.items():
+            key = f"{parent_key}{sep}{k}" if parent_key else k
+            items.update(flatten(v, key, sep))
+
+    elif isinstance(data, list):
+        for i, v in enumerate(data):
+            key = f"{parent_key}{sep}{i}"
+            items.update(flatten(v, key, sep))
+
+    else:
+        items[parent_key] = data
+
+    return items
 
 
 async def find_by_inn(client, inn):
@@ -32,83 +54,118 @@ async def find_by_inn(client, inn):
 
             r.raise_for_status()
 
-            response_json = r.json()
+            response = r.json()
 
-            suggestions = response_json.get("suggestions", [])
+            row = {
+                "inn_query": str(inn)
+            }
+
+            suggestions = response.get("suggestions", [])
 
             if suggestions:
-                return {
-                    "inn": inn,
-                    "raw_json": json.dumps(
-                        response_json,
-                        ensure_ascii=False
-                    )
-                }
-
-            return {
-                "inn": inn,
-                "raw_json": json.dumps(
-                    response_json,
-                    ensure_ascii=False
+                row.update(
+                    flatten(suggestions[0]["data"])
                 )
-            }
+
+            return row
 
         except Exception as e:
             print(f"Ошибка {inn}: {e}")
 
             return {
-                "inn": inn,
-                "raw_json": json.dumps(
-                    {"error": str(e)},
-                    ensure_ascii=False
-                )
+                "inn_query": str(inn),
+                "error": str(e)
             }
+
+
+async def process_batch(client, inns_batch):
+    tasks = [
+        asyncio.create_task(find_by_inn(client, inn))
+        for inn in inns_batch
+    ]
+
+    rows = []
+
+    for task in asyncio.as_completed(tasks):
+        row = await task
+        rows.append(row)
+
+    return rows
 
 
 async def main():
     inns = [
         7716810249,
         2635255421,
+        # ...
     ]
 
-    async with httpx.AsyncClient(
-        headers=HEADERS,
-        timeout=30,
-    ) as client:
+    fieldnames = []
+    writer = None
 
-        tasks = [
-            asyncio.create_task(find_by_inn(client, inn))
-            for inn in inns
-        ]
+    processed_count = 0
 
-        with open(
-            "dadata_result.csv",
-            "w",
-            newline="",
-            encoding="utf-8-sig"
-        ) as f:
+    with open(
+        "dadata_result.csv",
+        "w",
+        newline="",
+        encoding="utf-8-sig"
+    ) as f:
 
-            writer = csv.DictWriter(
-                f,
-                fieldnames=[
-                    "inn",
-                    "raw_json",
+        async with httpx.AsyncClient(
+            headers=HEADERS,
+            timeout=30,
+        ) as client:
+
+            for start in range(
+                0,
+                len(inns),
+                BATCH_SIZE
+            ):
+                batch = inns[
+                    start:start + BATCH_SIZE
                 ]
-            )
 
-            writer.writeheader()
+                batch_rows = await process_batch(
+                    client,
+                    batch
+                )
 
-            count = 0
+                batch_fields = {
+                    key
+                    for row in batch_rows
+                    for key in row.keys()
+                }
 
-            for task in asyncio.as_completed(tasks):
-                row = await task
+                #
+                # Заголовок определяем только по
+                # первому батчу из 1000 ИНН
+                #
+                if writer is None:
+                    fieldnames = sorted(batch_fields)
 
-                writer.writerow(row)
+                    writer = csv.DictWriter(
+                        f,
+                        fieldnames=fieldnames,
+                        extrasaction="ignore",
+                        restval=""
+                    )
 
-                count += 1
+                    writer.writeheader()
 
-                if count % 100 == 0:
-                    print(f"Обработано: {count}")
+                writer.writerows(batch_rows)
+
+                #
+                # Сбрасываем буфер на диск
+                #
+                f.flush()
+
+                processed_count += len(batch_rows)
+
+                print(
+                    f"Обработано: "
+                    f"{processed_count}"
+                )
 
     print("Готово")
 
