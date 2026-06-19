@@ -1,0 +1,13 @@
+main()
+│
+├── process_batch()
+│       │
+│       ├── find_by_inn(ИНН1)
+│       ├── find_by_inn(ИНН2)
+│       ├── find_by_inn(ИНН3)
+│       └── ...
+│
+│               │
+│               └── flatten(JSON)
+│
+└── запись в CSV

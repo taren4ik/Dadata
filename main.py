@@ -23,6 +23,13 @@ sem = asyncio.Semaphore(CONCURRENCY)
 
 
 def flatten(data, parent_key="", sep="_"):
+    """
+    Get all attribute from respose.
+    :param data:
+    :param parent_key:
+    :param sep:
+    :return:
+    """
     items = {}
 
     if isinstance(data, dict):
@@ -42,6 +49,12 @@ def flatten(data, parent_key="", sep="_"):
 
 
 async def find_by_inn(client, inn):
+    """
+    Get response.
+    :param client:
+    :param inn:
+    :return:
+    """
     async with sem:
         try:
             r = await client.post(
@@ -79,6 +92,7 @@ async def find_by_inn(client, inn):
 
 
 async def process_batch(client, inns_batch):
+    """Get batch items."""
     tasks = [
         asyncio.create_task(find_by_inn(client, inn))
         for inn in inns_batch
