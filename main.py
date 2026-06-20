@@ -1,6 +1,5 @@
 import os
 import csv
-import json
 import asyncio
 import httpx
 from dotenv import load_dotenv
@@ -16,7 +15,7 @@ HEADERS = {
     "Content-Type": "application/json",
 }
 
-CONCURRENCY = 20
+CONCURRENCY = 20  # одновременные запросы
 BATCH_SIZE = 1000
 
 sem = asyncio.Semaphore(CONCURRENCY)
@@ -110,8 +109,7 @@ async def process_batch(client, inns_batch):
 async def main():
     inns = [
         7716810249,
-        2635255421,
-        # ...
+        2635255421
     ]
 
     fieldnames = []
