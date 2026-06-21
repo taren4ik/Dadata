@@ -117,12 +117,8 @@ async def main():
 
     processed_count = 0
 
-    with open(
-        "dadata_result.csv",
-        "w",
-        newline="",
-        encoding="utf-8-sig"
-    ) as f:
+    with open( "dadata_result.csv", "w", newline="", encoding="utf-8-sig"
+               ) as f:
 
         async with httpx.AsyncClient(
             headers=HEADERS,
@@ -166,7 +162,6 @@ async def main():
                     writer.writeheader()
 
                 writer.writerows(batch_rows)
-
                 #
                 # Сбрасываем буфер на диск
                 #
