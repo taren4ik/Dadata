@@ -164,7 +164,6 @@ async def main():
                 writer.writerows(batch_rows)
                 #
                 # Сбрасываем буфер на диск
-                #
                 f.flush()
 
                 processed_count += len(batch_rows)
