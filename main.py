@@ -158,7 +158,6 @@ async def main():
                         extrasaction="ignore",
                         restval=""
                     )
-
                     writer.writeheader()
 
                 writer.writerows(batch_rows)
