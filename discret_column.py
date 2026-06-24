@@ -61,12 +61,7 @@ FIELDNAMES = [
 
 def read_inn_batches(filename, batch_size):
     """
-    Читает ИНН из текстового файла батчами.
-
-    Формат файла:
-    0123456789
-    7716810249
-    2635255421
+    Get return inn.
     """
     with open(filename, "r", encoding="utf-8") as f:
         while True:
