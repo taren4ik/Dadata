@@ -17,7 +17,7 @@ HEADERS = {
     "Content-Type": "application/json",
 }
 
-CONCURRENCY = 20
+CONCURRENCY = 5
 BATCH_SIZE = 1000
 
 sem = asyncio.Semaphore(CONCURRENCY)
