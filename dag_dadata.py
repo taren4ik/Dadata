@@ -15,7 +15,6 @@ POSTGRES_CONN_ID = "postgres_default"
 
 BATCH_SIZE = 1000
 
-
 @dag(
     dag_id="dadata_db_pipeline",
     start_date=datetime(2026, 1, 1),
