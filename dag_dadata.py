@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 
 from airflow.decorators import dag, task
-#from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 from psycopg2.extras import execute_values
 
