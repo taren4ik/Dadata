@@ -224,7 +224,6 @@ def dadata_db_pipeline():
                 INSERT INTO dadata_company (
                     inn,
                     inn_query,
-
                     address_data_region_kladr_id,
                     address_data_city,
                     address_data_federal_district,
@@ -234,9 +233,7 @@ def dadata_db_pipeline():
                     address_unrestricted_value,
 
                     authorities,
-
                     kpp,
-
                     management_name,
                     management_post,
 
