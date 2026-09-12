@@ -240,10 +240,8 @@ def dadata_db_pipeline():
                     name_full,
                     name_latin,
                     name_short_with_opf,
-
                     ogrn,
                     ogrn_date,
-
                     okato,
                     okfs,
                     okogu,
