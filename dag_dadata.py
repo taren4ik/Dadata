@@ -231,12 +231,10 @@ def dadata_db_pipeline():
                     address_data_region_iso_code,
                     address_data_source,
                     address_unrestricted_value,
-
                     authorities,
                     kpp,
                     management_name,
                     management_post,
-
                     name_full,
                     name_latin,
                     name_short_with_opf,
